@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 @author:FengXuan(fenffef@qq.com)
-@description: Adversarial Self-supervised learning for Few-shot Malicious Chinese Text Correction
+@description: PROTECT: Parameter-Efficient Tuning for Few-Shot Robust Chinese Text Correction
 """
 
 import argparse

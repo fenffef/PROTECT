@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-@author:XuMing(xuming624@qq.com)
 @description: 汉字处理的工具:判断unicode是否是汉字，数字，英文，或者其他字符。以及全角符号转半角符号。
 """
 

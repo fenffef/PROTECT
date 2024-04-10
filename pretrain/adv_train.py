@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author:XuMing(xuming624@qq.com)
-@description:
+@description: PROTECT: Parameter-Efficient Tuning for Few-Shot Robust Chinese Text Correction
 """
 import json
 from dataclasses import dataclass, field
