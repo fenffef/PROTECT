@@ -171,10 +171,12 @@ validation_dataloader = PromptDataLoader(dataset=dataset["validation"], template
 
 # load the pipeline model PromptForGeneration.
 if args.delta_type and not args.zero_shot:
-    from opendelta import LoraModel, BitFitModel, BitFitModel, AdapterModel, CompacterModel, LowRankAdapterModel, ParallelAdapterModel
+    from opendelta import LoraModel, ProtectModel, BitFitModel, BitFitModel, AdapterModel, CompacterModel, LowRankAdapterModel, ParallelAdapterModel
 
     if args.delta_type == "lora":
         delta_model = LoraModel(backbone_model=plm, modified_modules=["SelfAttention.q", "SelfAttention.v"])
+    elif args.delta_type == "protect":
+        delta_model = ProtectModel(backbone_model=plm, modified_modules=["SelfAttention.q", "SelfAttention.v"])
     elif args.delta_type == "bitfit":
         delta_model = BitFitModel(backbone_model=plm, modified_modules=['SelfAttention'])
     elif args.delta_type == "adapter":
