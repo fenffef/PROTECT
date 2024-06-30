@@ -2,7 +2,7 @@
 
 ---
 
-This repository contains code, model, datasets for [PROTECT]([https://drive.google.com/file/d/1qvp1G4DkvQALnJDoMPRWt1A4NqoAq7JD/view?usp=share_link](https://ieeexplore.ieee.org/document/10557151))
+This repository contains code, model, datasets for [PROTECT](https://ieeexplore.ieee.org/document/10557151)
 
 
 
