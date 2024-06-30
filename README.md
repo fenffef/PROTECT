@@ -4,7 +4,7 @@
 
 This repository contains code, model, datasets for [PROTECT](https://ieeexplore.ieee.org/document/10557151)
 
-
+![framework](framework.png)
 
 ## Pretrain
 
