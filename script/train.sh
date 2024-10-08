@@ -2,4 +2,4 @@
 
 echo "Start few-shot test..."
 
-python ./finetune/train.py
+python ./finetune/run.py
