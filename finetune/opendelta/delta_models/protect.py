@@ -1,72 +1,82 @@
-from typing import Optional, Union
-
-from opendelta.utils.signature import get_arg_names, get_arg_names_inside_func
+from typing import Optional, Union, List
+import torch
+import torch.nn as nn
+import math
+from opendelta.utils.signature import get_arg_names_inside_func
 from opendelta.utils.name_based_addressing import *
 from opendelta.basemodel import DeltaBase
-import torch.nn as nn
 from opendelta import BaseDeltaConfig
-import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-class LowRankLinear(nn.Module):
-    #  ------------------------------------------------------------------------------------------
-    #  Copyright (c) Microsoft Corporation. All rights reserved.
-    #  Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
-    #  ------------------------------------------------------------------------------------------
-    #  copy from loralib and do some refactor
+class SLALinear(nn.Module):
     def __init__(self,
-        in_features,
-        out_features,
-        weight,
-        r=8,
-        lora_alpha=16,
-        lora_dropout=0.0,
-    ):
+                 in_features,
+                 out_features,
+                 weight,
+                 r=8,
+                 sla_alpha=16,
+                 sla_dropout=0.0):
         super().__init__()
         self.r = r
-        self.lora_alpha = lora_alpha
-        self.lora_dropout = lora_dropout
-        if lora_dropout > 0.:
-            self.lora_dropout = nn.Dropout(p=lora_dropout)
+        self.sla_alpha = sla_alpha
+        self.sla_dropout = sla_dropout
+        if sla_dropout > 0.:
+            self.sla_dropout = nn.Dropout(p=sla_dropout)
         else:
-            self.lora_dropout = lambda x: x
+            self.sla_dropout = lambda x: x
         if r > 0:
-            self.lora_A = nn.Parameter(weight.new_zeros((r, in_features)))
-            self.lora_B = nn.Parameter(weight.new_zeros((out_features, r)))
-            self.scaling = self.lora_alpha / self.r
-            nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
-            nn.init.zeros_(self.lora_B)
+            self.sla_A = nn.Parameter(weight.new_zeros((r, in_features)))
+            self.sla_B = nn.Parameter(weight.new_zeros((out_features, r)))
+            self.scaling = self.sla_alpha / self.r
+            nn.init.kaiming_uniform_(self.sla_A, a=math.sqrt(5))
+            nn.init.zeros_(self.sla_B)
 
     def forward(self, x):
-        return (self.lora_dropout(x) @ self.lora_A.T @ self.lora_B.T) * self.scaling
+        return (self.sla_dropout(x) @ self.sla_A.T @ self.sla_B.T) * self.scaling
+
 
 @dataclass
-class PretectArguments:
+class ProtectArguments:
     r: int = 8
-    lora_alpha: int = 16
-    lora_dropout: float = 0.0
+    sla_alpha: int = 16
+    sla_dropout: float = 0.0
 
-class PretectConfig(BaseDeltaConfig):
-    r"""
-    This is the configuration class to store the configuration of a :py:class:`~LoraModel`
 
-    """
-    def __init__(
-        self,
-        lora_r=8,
-        lora_alpha=16,
-        lora_dropout=0.0,
-        **kwargs
-    ):
+class ProtectConfig(BaseDeltaConfig):
+    def __init__(self,
+                 sla_r=8,
+                 sla_alpha=16,
+                 sla_dropout=0.0,
+                 **kwargs):
         super().__init__(**kwargs)
         arg_names = get_arg_names_inside_func(self.__init__)
         for arg_name in arg_names:
-            if not hasattr(self, arg_name): # the arg has not been registered in parent config
+            if not hasattr(self, arg_name):  # the arg has not been registered in parent config
                 setattr(self, arg_name, locals()[arg_name])
 
 
+# MINE (Mutual Information Neural Estimator) for minimizing mutual information between sla and cap representations
+class MINE(nn.Module):
+    def __init__(self, input_size):
+        super(MINE, self).__init__()
+        self.fc1 = nn.Linear(input_size * 2, 512)
+        self.fc2 = nn.Linear(512, 1)
+
+    def forward(self, x, y):
+        combined = torch.cat((x, y), dim=-1)
+        h = torch.relu(self.fc1(combined))
+        return self.fc2(h)
+
+    def mutual_information(self, original_rep, sla_rep, batch_size):
+        joint = self.forward(original_rep, sla_rep)
+        sla_rep_perm = sla_rep[torch.randperm(batch_size)]
+        marginal = self.forward(original_rep, sla_rep_perm)
+        mi_estimate = torch.mean(joint) - torch.log(torch.mean(torch.exp(marginal)))
+        return mi_estimate
+
+
 class ProtectModel(DeltaBase):
-    config_class = PretectConfig
+    config_class = ProtectConfig
     delta_type = "protect"
     default_modified_modules = ['attn@.q@', 'attn@.v@']
     _supported_backends = ['hf', 'bmt']
@@ -74,92 +84,71 @@ class ProtectModel(DeltaBase):
 
     def __init__(self,
                  backbone_model: nn.Module,
-                 lora_r=8,
-                 lora_alpha=16,
-                 lora_dropout=0.0,
+                 sla_r=8,
+                 sla_alpha=16,
+                 sla_dropout=0.0,
+                 mine_input_size=768,  # 假设表征维度为 768
                  modified_modules: Optional[List[str]] = None,
                  unfrozen_modules: Optional[List[str]] = None,
                  exclude_modules: Optional[List[str]] = None,
                  common_structure: Optional[bool] = None,
                  interactive_modify: Optional[Union[bool, int]] = False,
-                 backend: Optional[str] = "hf",
-                 ):
+                 backend: Optional[str] = "hf"):
         DeltaBase.__init__(self,
                            backbone_model,
                            modified_modules=modified_modules,
                            unfrozen_modules=unfrozen_modules,
                            common_structure=common_structure,
                            interactive_modify=interactive_modify,
-                           backend=backend,
-                           )
+                           backend=backend)
         arg_names = get_arg_names_inside_func(self.__init__)
         for arg_name in arg_names:
-            if not hasattr(self, arg_name): # not registered in parent class
+            if not hasattr(self, arg_name):  # not registered in parent class
                 setattr(self, arg_name, locals()[arg_name])
 
         self.delta_modules = nn.ModuleList()
-
-        self.add_all_delta_to_backbone(self.backbone_model,
-                                       self.modified_modules,
-                                       )
-
-        # Add projection layers for prefix and text representations
-        self.prefix_projection = nn.Linear(self.backbone_model.config.hidden_size, 128)
-        self.text_projection = nn.Linear(self.backbone_model.config.hidden_size, 128)
+        self.mine = MINE(input_size=mine_input_size)  # Initialize MINE
+        self.add_all_delta_to_backbone(self.backbone_model, self.modified_modules)
 
     def update_module(self, module: nn.Module, key: str):
         parent_ref, child_name, child_ref = self.find_module(module, key)
         parallel_module = self.new_module_like(child_module=child_ref)
-        self.insert_parallel_module(child_ref, delta_module=parallel_module, delta_name="lora")
+        self.insert_parallel_module(child_ref, delta_module=parallel_module, delta_name="protect")
 
     def _pseudo_data_to_instantiate(self, module):
-        # no need to pass pseudo input, so overwrite it
+        # No need to pass pseudo input, so overwrite it
         pass
 
     def new_module_like(self, child_module):
         in_features, out_features = child_module.in_features, child_module.out_features
-        new_module = LowRankLinear(in_features=in_features,
+        new_module = SLALinear(in_features=in_features,
                                    out_features=out_features,
                                    weight=child_module.weight,
-                                   r=self.lora_r,
-                                   lora_alpha=self.lora_alpha,
-                                   lora_dropout=self.lora_dropout)
+                                   r=self.sla_r,
+                                   sla_alpha=self.sla_alpha,
+                                   sla_dropout=self.sla_dropout)
         if self.backend == "bmt":
             import bmtrain as bmt
             new_module = bmt.BMTrainModelWrapper(new_module)
-        
+
         self.delta_modules.append(new_module)
         return new_module
 
-    def forward(self, input_ids, attention_mask=None, token_type_ids=None):
-        outputs = self.backbone_model(input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
-        hidden_states = outputs[0]
+    def forward(self, inputs, compute_loss=True):
+        original_output = self.backbone_model(inputs)
 
-        # Obtain the representations for the prefix and text
-        prefix_representation = self.prefix_projection(hidden_states[:, 0, :])
-        text_representation = self.text_projection(hidden_states[:, 1:, :].mean(dim=1))
+        SLA_output = self.apply_SLA(inputs)
 
-        # Calculate InfoNCE loss
-        loss = self.infonce_loss(prefix_representation, text_representation)
+        batch_size = original_output.size(0)
+        CAP_loss = self.mine.mutual_information(original_output, SLA_output, batch_size)
 
-        return outputs, loss
+        if compute_loss:
+            SLA_loss = self.compute_SLA_loss(SLA_output, inputs)
+            total_loss = SLA_loss + CAP_loss
+            return total_loss
 
-    def infonce_loss(self, prefix_representation, text_representation, temperature=0.1):
-        batch_size = prefix_representation.size(0)
-        representations = torch.cat([prefix_representation, text_representation], dim=0)
-        similarity_matrix = F.cosine_similarity(representations.unsqueeze(1), representations.unsqueeze(0), dim=2)
+        return SLA_output
 
-        labels = torch.cat([torch.arange(batch_size) for _ in range(2)]).to(prefix_representation.device)
-        labels = (labels.unsqueeze(0) == labels.unsqueeze(1)).float()
-
-        logits = similarity_matrix / temperature
-        logits_max, _ = logits.max(dim=1, keepdim=True)
-        logits = logits - logits_max.detach()
-
-        exp_logits = logits.exp()
-        log_prob = logits - torch.log(exp_logits.sum(dim=1, keepdim=True))
-
-        mean_log_prob_pos = (labels * log_prob).sum(dim=1) / labels.sum(dim=1)
-        loss = -mean_log_prob_pos.mean()
-
-        return loss
+    def apply_SLA(self, inputs):
+        modified_output = self.backbone_model(inputs)
+        return modified_output
