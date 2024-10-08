@@ -10,7 +10,7 @@ This repository contains code, model, datasets for [PROTECT](https://ieeexplore.
 
 **dataset**
 
-Pretrain dataset available at [here](https://drive.google.com/file/d/1qvp1G4DkvQALnJDoMPRWt1A4NqoAq7JD/view?usp=share_link) and [Huggingface](https://huggingface.co/fenffef/PROTECT)
+Pretrain dataset available at [here](https://drive.google.com/file/d/1gWAloeMM2MqC16Vc7j4gv9YjVvcsifQi/view?usp=drive_link) and [Huggingface](https://huggingface.co/fenffef/PROTECT)
 
 ```
 cd scripts
@@ -23,9 +23,9 @@ sh pretrain.sh
 
 To facilitate replication, we provide pre-trained PROTECT model and datasets.
 
-pre-trained PROTECT model available at [here](https://drive.google.com/file/d/16KNXFcbEiC9Wzv638l5OCTZsmmyTlJL8/view?usp=share_link)
+pre-trained PROTECT model available at [Huggingface](https://huggingface.co/fenffef/PROTECT)
 
-datasets available at [here](https://drive.google.com/file/d/1OeEX212_lbleP9a1Wmi3iWrdY1kIbZYi/view?usp=share_link)
+datasets available at [here](https://drive.google.com/file/d/1gWAloeMM2MqC16Vc7j4gv9YjVvcsifQi/view?usp=drive_link)
 
 ```
 cd scripts
