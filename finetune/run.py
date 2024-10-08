@@ -16,11 +16,11 @@ parser = argparse.ArgumentParser("")
 parser.add_argument("--lr", type=float, default=5e-5)
 parser.add_argument("--plm_eval_mode", action="store_true")
 parser.add_argument("--model", type=str, default='t5')  # tested model are gpt2/t5
-parser.add_argument("--model_name_or_path", default='/media/HD0/checkpoint/t5-robust-20221226/')
+parser.add_argument("--model_name_or_path", default='fenffef/PROTECT')
 # parser.add_argument("--model_name_or_path", default='/media/HD0/checkpoint/bart-mix-20221221/')
-parser.add_argument('--train_path', type=str, default='/media/HD0/T5-Corrector/src/finetune/RobustCSC/csc/14train.txt',
+parser.add_argument('--train_path', type=str, default='data_dir',
                         help='train dataset')
-parser.add_argument('--test_path', type=str, default='/media/HD0/T5-Corrector/src/finetune/RobustCSC/csc/14test.txt',
+parser.add_argument('--test_path', type=str, default='data_dir',
                         help='test dataset')
 parser.add_argument("--template", default='prefix') #manual soft mix prefix
 parser.add_argument('--batch_size', type=int, default=32, help='batch size')
@@ -51,7 +51,7 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
 if args.wandb:
-    wandb.init(project="T5-Robust-few-shot")
+    wandb.init(project="PROTECT")
 
 print(args)
 
