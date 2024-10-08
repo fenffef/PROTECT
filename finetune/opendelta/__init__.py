@@ -14,7 +14,7 @@ from .utils.saving_loading_utils import SaveLoadMixin
 from .basemodel import DeltaBase
 from .auto_delta import AutoDeltaConfig, AutoDeltaModel
 from .utils.structure_mapping import CommonStructureMap
-from .delta_models.protect import LoraModel
+from .delta_models.lora import LoraModel
 from .delta_models.bitfit import BitFitModel
 from .delta_models.compacter import CompacterModel
 from .delta_models.adapter import AdapterModel
