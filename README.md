@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # PROTECT: Parameter-Efficient Tuning for Few-Shot Robust Chinese Text Correction
 
 ---
@@ -32,6 +31,3 @@ datasets available at [here](https://drive.google.com/file/d/1OeEX212_lbleP9a1Wm
 cd scripts
 sh train.sh
 ```
-=======
-## BOOM
->>>>>>> 441c3fa (Boom)
