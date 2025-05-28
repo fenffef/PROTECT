@@ -26,3 +26,8 @@ datasets available at [here](https://drive.google.com/file/d/1gWAloeMM2MqC16Vc7j
 cd scripts
 sh train.sh
 ```
+
+## Citation
+```
+Feng X, Gu T, Chang L, et al. PROTECT: Parameter-Efficient Tuning for Few-Shot Robust Chinese Text Correction[J]. IEEE/ACM Transactions on Audio, Speech, and Language Processing, 2024.
+```
