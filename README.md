@@ -18,7 +18,7 @@ sh pretrain.sh
 
 To facilitate replication, we provide pre-trained PROTECT model and datasets.
 
-pre-trained PROTECT model available at [here](https://drive.google.com/file/d/16KNXFcbEiC9Wzv638l5OCTZsmmyTlJL8/view?usp=share_link)
+pre-trained PROTECT model available at [here](https://drive.google.com/file/d/1XFVRZU6dF7NpIX7LQ-Kp0wKa75PTU9c7/view)
 
 datasets available at [here](https://drive.google.com/file/d/1gWAloeMM2MqC16Vc7j4gv9YjVvcsifQi/view?usp=drive_link)
 
