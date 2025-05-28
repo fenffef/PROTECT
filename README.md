@@ -28,6 +28,5 @@ sh train.sh
 ```
 
 ## Citation
-```
-Feng X, Gu T, Chang L, et al. PROTECT: Parameter-Efficient Tuning for Few-Shot Robust Chinese Text Correction[J]. IEEE/ACM Transactions on Audio, Speech, and Language Processing, 2024.
-```
+Xuan Feng, Tianlong Gu, Liang Chang, Xiaoli Liu, PROTECT: Parameter-Efficient Tuning for Few-Shot Robust Chinese Text Correction[J], in IEEE/ACM Transactions on Audio, Speech, and Language Processing (TASLP 2024), doi: 10.1109/TASLP.2024.3414333.
+
